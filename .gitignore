@@ -1,0 +1,64 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+src-tauri/target/
+*.exe
+*.dmg
+*.AppImage
+*.deb
+*.msi
+*.nsis
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+scripts/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Reference materials (local only, not for distribution)
+references/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Tauri
+src-tauri/gen/
+WixTools/
+
+# Core binaries (downloaded at runtime)
+src-tauri/bin/mihomo*
+src-tauri/bin/xray*
+
+# TS build info
+tsconfig.tsbuildinfo
+
+# Rust
+**/*.rs.bk
+
+# pnpm workspace settings (auto-generated)
+pnpm-workspace-settings.json
+
+# Test coverage
+coverage/
+*.lcov
+
+CLAUDE.md
+.claude/
