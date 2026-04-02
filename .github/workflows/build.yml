@@ -21,13 +21,9 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            mihomo_asset: mihomo-windows-amd64
-            xray_asset: Xray-windows-64
             ext: .exe
           - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
-            mihomo_asset: mihomo-linux-amd64
-            xray_asset: Xray-linux-64
             ext: ""
 
     runs-on: ${{ matrix.os }}
@@ -58,35 +54,55 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
-      - name: Download Mihomo
+      - name: Download Mihomo (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          mkdir -p src-tauri/bin
+          URL="https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VERSION}/mihomo-linux-amd64-${MIHOMO_VERSION}.gz"
+          echo "Downloading $URL"
+          curl -fSL "$URL" -o /tmp/mihomo.gz
+          gunzip -f /tmp/mihomo.gz
+          mv /tmp/mihomo src-tauri/bin/mihomo
+          chmod +x src-tauri/bin/mihomo
+
+      - name: Download Mihomo (Windows)
+        if: runner.os == 'Windows'
         shell: bash
         run: |
           mkdir -p src-tauri/bin
-          ASSET="${{ matrix.mihomo_asset }}-${MIHOMO_VERSION}"
-          URL="https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VERSION}/${ASSET}.gz"
+          URL="https://github.com/MetaCubeX/mihomo/releases/download/${MIHOMO_VERSION}/mihomo-windows-amd64-${MIHOMO_VERSION}.zip"
           echo "Downloading $URL"
-          curl -L "$URL" -o /tmp/mihomo.gz
-          gunzip -f /tmp/mihomo.gz
-          mv /tmp/mihomo src-tauri/bin/mihomo${{ matrix.ext }}
-          chmod +x src-tauri/bin/mihomo${{ matrix.ext }}
+          curl -fSL "$URL" -o mihomo.zip
+          unzip -o mihomo.zip -d mihomo-extract
+          mv mihomo-extract/mihomo-windows-amd64.exe src-tauri/bin/mihomo.exe || mv mihomo-extract/mihomo*.exe src-tauri/bin/mihomo.exe
+          rm -rf mihomo.zip mihomo-extract
 
-      - name: Download Xray
+      - name: Download Xray (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          URL="https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-linux-64.zip"
+          echo "Downloading $URL"
+          curl -fSL "$URL" -o /tmp/xray.zip
+          mkdir -p /tmp/xray-extract
+          unzip -o /tmp/xray.zip -d /tmp/xray-extract
+          mv /tmp/xray-extract/xray src-tauri/bin/xray
+          chmod +x src-tauri/bin/xray
+
+      - name: Download Xray (Windows)
+        if: runner.os == 'Windows'
         shell: bash
         run: |
-          ASSET="${{ matrix.xray_asset }}"
-          URL="https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/${ASSET}.zip"
+          URL="https://github.com/XTLS/Xray-core/releases/download/${XRAY_VERSION}/Xray-windows-64.zip"
           echo "Downloading $URL"
-          curl -L "$URL" -o /tmp/xray.zip
-          cd /tmp && unzip -o xray.zip -d xray-extract
-          mv /tmp/xray-extract/xray${{ matrix.ext }} src-tauri/bin/xray${{ matrix.ext }}
-          chmod +x src-tauri/bin/xray${{ matrix.ext }} || true
+          curl -fSL "$URL" -o xray.zip
+          mkdir -p xray-extract
+          unzip -o xray.zip -d xray-extract
+          mv xray-extract/xray.exe src-tauri/bin/xray.exe
+          rm -rf xray.zip xray-extract
 
       - name: Verify binaries
         shell: bash
-        run: |
-          ls -la src-tauri/bin/
-          src-tauri/bin/mihomo${{ matrix.ext }} -v || true
-          src-tauri/bin/xray${{ matrix.ext }} version || true
+        run: ls -la src-tauri/bin/
 
       - run: pnpm install
 
@@ -95,9 +111,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: "Vortex ${{ github.ref_name }}"
-          releaseBody: "See the assets to download this version and install."
+          tagName: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || '' }}
+          releaseName: ${{ startsWith(github.ref, 'refs/tags/') && format('Vortex {0}', github.ref_name) || '' }}
           releaseDraft: true
           prerelease: false
           args: --target ${{ matrix.target }}
@@ -109,7 +124,7 @@ jobs:
           path: |
             src-tauri/target/${{ matrix.target }}/release/bundle/**/*.exe
             src-tauri/target/${{ matrix.target }}/release/bundle/**/*.msi
-            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.nsis
+            src-tauri/target/${{ matrix.target }}/release/bundle/**/*.nsis*
             src-tauri/target/${{ matrix.target }}/release/bundle/**/*.AppImage
             src-tauri/target/${{ matrix.target }}/release/bundle/**/*.deb
           if-no-files-found: warn
