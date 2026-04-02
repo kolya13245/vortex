@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
 
 /// Find core binary path
+#[allow(clippy::needless_borrows_for_generic_args)]
 pub fn find_binary(core_type: CoreType, data_dir: &Path) -> Option<PathBuf> {
     let name = match core_type {
         CoreType::Mihomo => "mihomo",
@@ -16,13 +17,13 @@ pub fn find_binary(core_type: CoreType, data_dir: &Path) -> Option<PathBuf> {
 
     // Check data_dir/bin/ first
     let bin_dir = data_dir.join("bin");
-    let path = bin_dir.join(name);
+    let path = bin_dir.join(&name);
     if path.exists() {
         return Some(path);
     }
 
     // Check PATH
-    if let Ok(output) = Command::new("which").arg(name).output() {
+    if let Ok(output) = Command::new("which").arg(&name).output() {
         if output.status.success() {
             let p = String::from_utf8_lossy(&output.stdout).trim().to_string();
             if !p.is_empty() {
