@@ -5,10 +5,8 @@ pub enum VortexError {
     #[error("Core start failed: {0}")]
     CoreStartFailed(String),
 
-    #[error("Core not running")]
-    CoreNotRunning,
-
     #[error("Config generation failed: {0}")]
+    #[allow(dead_code)]
     ConfigGenerationFailed(String),
 
     #[error("Subscription fetch failed: {0}")]

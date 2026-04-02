@@ -73,12 +73,9 @@ pub async fn add_subscription(
         fetcher::SubFormat::Base64 => parser::parse_base64(&result.body)?,
     };
 
-    let core_type = result.core_hint.unwrap_or_else(|| {
-        // Default: if YAML -> Mihomo, if JSON/Base64 -> Xray
-        match result.format {
-            fetcher::SubFormat::ClashYaml => CoreType::Mihomo,
-            _ => CoreType::Xray,
-        }
+    let core_type = result.core_hint.unwrap_or(match result.format {
+        fetcher::SubFormat::ClashYaml => CoreType::Mihomo,
+        _ => CoreType::Xray,
     });
 
     let (traffic_used, traffic_total, expire) = match &result.traffic {
@@ -208,7 +205,7 @@ pub fn connect(state: State<AppState>) -> Result<(), VortexError> {
     let config_dir = state.data_dir.join("configs");
     let config_path = match settings.core_type {
         CoreType::Mihomo => {
-            let content = mihomo_gen::generate(&all_nodes, &settings, &config_dir);
+            let content = mihomo_gen::generate(&all_nodes, &settings);
             let path = config_dir.join("config.yaml");
             std::fs::write(&path, &content)?;
             path

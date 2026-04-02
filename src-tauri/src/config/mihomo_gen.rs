@@ -1,9 +1,7 @@
 use crate::state::{ServerNode, UserSettings};
-use serde_json::Value;
-use std::path::Path;
 
 /// Generate Mihomo YAML config from nodes and settings
-pub fn generate(nodes: &[ServerNode], settings: &UserSettings, config_dir: &Path) -> String {
+pub fn generate(nodes: &[ServerNode], settings: &UserSettings) -> String {
     let mut proxies = Vec::new();
     let mut proxy_names = Vec::new();
 

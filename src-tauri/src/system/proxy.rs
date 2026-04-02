@@ -39,7 +39,7 @@ pub fn unset_system_proxy() -> Result<(), VortexError> {
 
 #[cfg(target_os = "linux")]
 fn set_proxy_linux(addr: &str) -> Result<(), VortexError> {
-    let port_str = addr.split(':').last().unwrap_or("7890").to_string();
+    let port_str = addr.rsplit_once(':').map(|(_, p)| p).unwrap_or("7890").to_string();
 
     let cmds: Vec<Vec<&str>> = vec![
         vec!["gsettings", "set", "org.gnome.system.proxy", "mode", "manual"],

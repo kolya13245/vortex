@@ -1,5 +1,5 @@
 use crate::error::VortexError;
-use crate::state::{CoreType, Subscription, TrafficInfo};
+use crate::state::{CoreType, TrafficInfo};
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, USER_AGENT};
 
 /// Detected subscription format
@@ -20,6 +20,7 @@ pub struct FetchResult {
     pub format: SubFormat,
     pub core_hint: Option<CoreType>,
     pub traffic: Option<TrafficInfo>,
+    #[allow(dead_code)]
     pub update_interval: Option<u64>,
 }
 
@@ -86,10 +87,10 @@ pub async fn fetch_subscription(url: &str, hwid: &str) -> Result<FetchResult, Vo
         .map_err(|e| VortexError::SubscriptionFetchFailed(e.to_string()))?;
 
     let format = detect_format(&body, &content_type);
-    let core_hint = core_hint.or_else(|| match &format {
+    let core_hint = core_hint.or(match format {
         SubFormat::XrayJson => Some(CoreType::Xray),
         SubFormat::ClashYaml => Some(CoreType::Mihomo),
-        SubFormat::Base64 => None, // Could be either, default will be used
+        SubFormat::Base64 => None,
     });
 
     Ok(FetchResult {
